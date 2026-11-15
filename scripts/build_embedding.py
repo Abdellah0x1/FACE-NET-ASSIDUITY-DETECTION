@@ -7,6 +7,8 @@ Steps:
  2. Near-duplicate removal inside each person (cosine similarity > DUP_COS).
     Duplicates are listed in dropped_duplicates.csv, files are not deleted.
  3. Reproducible enroll/test split per person (fixed SEED).
+ 4. The real name of each person (from private/id_name_mapping.csv) is
+    written in the "name" column of the label files.
 
 Outputs (embeddings/):
   embeddings.npy + labels.csv            enrollment library (what the live system loads)
@@ -26,10 +28,22 @@ import face_utils as fu
 
 PROCESSED = Path("dataset/processed")
 OUT = Path("embeddings")
+MAPPING = Path("dataset/id_name_mapping.csv")
 
 ENROLL_RATIO = 0.7   # share of each person's photos used for enrollment
 SEED = 42
 DUP_COS = 0.98       # cosine similarity above this = near-identical photo
+
+HEADER = ["index", "person_id", "name", "filename", "split"]
+
+
+def load_names():
+    """person_id -> real name. Falls back to the ID if the mapping is missing."""
+    if not MAPPING.exists():
+        print(f"WARNING: {MAPPING} not found, the name column will contain the IDs")
+        return {}
+    with open(MAPPING, encoding="utf-8-sig", newline="") as f:
+        return {r["person_id"].strip(): r["name"].strip() for r in csv.DictReader(f)}
 
 
 def write_csv(path, header, rows):
@@ -44,11 +58,13 @@ def main():
     if not people:
         raise SystemExit("Nothing in dataset/processed. Run preprocess.py first.")
 
+    names = load_names()
     model = fu.get_facenet()
     lib_emb, lib_rows, test_emb, test_rows, dropped = [], [], [], [], []
 
     for person_dir in people:
         pid = person_dir.name
+        name = names.get(pid, pid)
         files = sorted(f for f in person_dir.iterdir() if f.suffix.lower() in fu.EXTS)
         if not files:
             print(f"{pid}: no processed faces, skipped")
@@ -72,19 +88,19 @@ def main():
 
         for i in enroll:
             lib_emb.append(emb[i])
-            lib_rows.append([len(lib_rows), pid, files[i].name, "enroll"])
+            lib_rows.append([len(lib_rows), pid, name, files[i].name, "enroll"])
         for i in test:
             test_emb.append(emb[i])
-            test_rows.append([len(test_rows), pid, files[i].name, "test"])
+            test_rows.append([len(test_rows), pid, name, files[i].name, "test"])
 
-        print(f"{pid}: {len(files)} faces, {len(files) - len(kept)} near-duplicates dropped, "
-              f"{len(enroll)} enroll / {len(test)} test")
+        print(f"{pid} ({name}): {len(files)} faces, {len(files) - len(kept)} near-duplicates "
+              f"dropped, {len(enroll)} enroll / {len(test)} test")
 
     OUT.mkdir(exist_ok=True)
     np.save(OUT / "embeddings.npy", np.array(lib_emb, dtype=np.float32))
-    write_csv(OUT / "labels.csv", ["index", "person_id", "filename", "split"], lib_rows)
+    write_csv(OUT / "labels.csv", HEADER, lib_rows)
     np.save(OUT / "test_embeddings.npy", np.array(test_emb, dtype=np.float32))
-    write_csv(OUT / "test_labels.csv", ["index", "person_id", "filename", "split"], test_rows)
+    write_csv(OUT / "test_labels.csv", HEADER, test_rows)
     write_csv(OUT / "dropped_duplicates.csv", ["person_id", "dropped_file", "similar_to"], dropped)
 
     params = {"date": datetime.now().isoformat(timespec="seconds"),
