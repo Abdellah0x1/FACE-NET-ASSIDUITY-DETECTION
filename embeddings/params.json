@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-15T15:55:25",
+  "image_size": 160,
+  "margin": 20,
+  "min_confidence": 0.95,
+  "weights": "vggface2",
+  "enroll_ratio": 0.7,
+  "seed": 42,
+  "dup_cosine": 0.98,
+  "library_size": 69,
+  "test_size": 28,
+  "people": 5
+}
