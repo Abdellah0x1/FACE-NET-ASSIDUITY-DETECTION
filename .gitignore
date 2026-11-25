@@ -2,3 +2,5 @@
 test_dl/
 __pycache__/
 *.pyc
+
+reports/liveness_log.csv

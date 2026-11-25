@@ -8,3 +8,4 @@ requests
 tqdm
 torch
 torchvision
+mediapipe==0.10.14

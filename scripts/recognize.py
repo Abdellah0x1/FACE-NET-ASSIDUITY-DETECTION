@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 EMB_DIR = Path("embeddings")
-DEFAULT_THRESHOLD = 0.5   # à ajuster à l'étape 8 (semaine 5)
+DEFAULT_THRESHOLD = 0.34   
 
 
 def build_library(embeddings, person_ids):
