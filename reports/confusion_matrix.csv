@@ -1,0 +1,7 @@
+,person_01,person_02,person_03,person_04,person_05,inconnu
+person_01,7,0,0,0,0,0
+person_02,0,7,0,0,0,0
+person_03,0,0,4,0,0,0
+person_04,0,0,0,5,0,0
+person_05,0,0,0,0,5,0
+inconnu (simule),0,0,0,0,0,97

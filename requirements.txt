@@ -1,0 +1,11 @@
+numpy
+pandas
+pillow
+opencv-python
+scikit-learn
+matplotlib
+requests
+tqdm
+torch
+torchvision
+mediapipe==0.10.14
